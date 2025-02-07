@@ -4,7 +4,7 @@ import (
 	"log/slog"
 	"os"
 	"url-shortener/internal/config"
-	"url-shortener/internal/logger/sl"
+	"url-shortener/internal/lib/logger/sl"
 	"url-shortener/internal/storage/sqlite"
 
 	"github.com/go-chi/chi/middleware"
@@ -23,6 +23,7 @@ func main() {
 
 	log.Info("starting url-shortener", slog.String("env", cfg.Env))
 	log.Debug("debug messages are enabled")
+	log.Error("log error")
 
 	storage, err := sqlite.New(cfg.StoragePath)
 	if err != nil {
