@@ -2,8 +2,10 @@ package main
 
 import (
 	"log/slog"
+	"net/http"
 	"os"
 	"url-shortener/internal/config"
+	"url-shortener/internal/http-server/handlers/url/save"
 	"url-shortener/internal/lib/logger/sl"
 	"url-shortener/internal/storage/sqlite"
 
@@ -23,24 +25,15 @@ func main() {
 
 	log.Info("starting url-shortener", slog.String("env", cfg.Env))
 	log.Debug("debug messages are enabled")
-	log.Error("log error")
+	log.Error("error messages are enabled")
 
 	storage, err := sqlite.New(cfg.StoragePath)
 	if err != nil {
 		log.Error("failed to init storage", sl.Err(err))
 		os.Exit(1)
 	}
-	err = storage.SaveURL("https://google.com", "google")
-	if err != nil {
-		log.Error("failed to save url", sl.Err(err))
-		os.Exit(1)
-	}
 
-	err = storage.SaveURL("https://google.com", "google")
-	if err != nil {
-		log.Error("failed to save url", sl.Err(err))
-		os.Exit(1)
-	}
+	_ = storage
 
 	router := chi.NewRouter()
 
@@ -48,6 +41,24 @@ func main() {
 	router.Use(middleware.Logger)
 	router.Use(middleware.Recoverer)
 	router.Use(middleware.URLFormat)
+
+	router.Post("/url", save.New(log, storage))
+
+	log.Info("starting server", slog.String("address", cfg.Address))
+
+	srv := &http.Server{
+		Addr:         cfg.Address,
+		Handler:      router,
+		ReadTimeout:  cfg.HTTPServer.Timeout,
+		WriteTimeout: cfg.HTTPServer.Timeout,
+		IdleTimeout:  cfg.HTTPServer.IdleTimeout,
+	}
+
+	if err := srv.ListenAndServe(); err != nil {
+		log.Error("failed to start server")
+	}
+
+	log.Error("server stopped")
 
 	// TODO: run server:
 }
