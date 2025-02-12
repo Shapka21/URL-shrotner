@@ -18,6 +18,8 @@ type HTTPServer struct {
 	Address     string        `yaml:"address" env-defoult:"localhost:8080"`
 	Timeout     time.Duration `yaml:"timeout" env-defoult:"4s"`
 	IdleTimeout time.Duration `yaml:"idle_timeout" env-defoult:"60s"`
+	User        string        `yaml:"user" env-required:"true"`
+	Password    string        `yaml:"password" env-required:"true" env:"HTTP_SERVER_PASSWORD"`
 }
 
 func MustLoad() *Config {
@@ -28,7 +30,7 @@ func MustLoad() *Config {
 
 	// check if file exist
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
-		log.Fatalf("config file %s does noot exist", configPath)
+		log.Fatalf("config file %s does not exist", configPath)
 	}
 
 	var cfg Config
